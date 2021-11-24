@@ -8,6 +8,7 @@ import (
 )
 
 var ctxKey = &contextKey{"tenantedDatabaseConnection"}
+var tenantIDKey = &contextKey{"tenantID"}
 
 type contextKey struct {
 	name string
@@ -15,9 +16,14 @@ type contextKey struct {
 
 var ErrNoTenantSet = errors.New("tenant id not set in context")
 
-// FromContext finds the tenanted database connection from the context. REQUIRES Middleware to have run.
+// FromContext finds the tenanted database connection from the context. REQUIRES tenancy.Open() to have run.
 func FromContext(ctx context.Context) *Conn {
 	return ctx.Value(ctxKey).(*Conn)
+}
+
+// GetID finds the tenant ID from the context. REQUIRES tenancy.Open() to have run.
+func GetID(ctx context.Context) string {
+	return ctx.Value(ctxKey).(string)
 }
 
 type Conn struct {
@@ -40,17 +46,24 @@ func (tc *Conn) QueryRow(query string, args ...interface{}) *sql.Row {
 }
 
 // Open sets the tenant and returns a database connection scoped to the tenant
-func Open(ctx context.Context, db *sql.DB, tenantID string) (*Conn, error) {
+// it returns a new context which contains the tenant ID and the connection
+func Open(ctx context.Context, db *sql.DB, tenantID string) (*Conn, context.Context, error) {
 	conn, err := db.Conn(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	_, err = conn.ExecContext(ctx, "select set_tenant($1)", tenantID)
 	if err != nil {
 		closeError := conn.Close()
-		return nil, errors.Wrap(closeError, err.Error())
+		return nil, nil, errors.Wrap(closeError, err.Error())
 	}
-	return &Conn{conn}, nil
+
+	tConn := &Conn{conn}
+
+	newCtx := context.WithValue(ctx, ctxKey, tConn)
+	newCtx = context.WithValue(newCtx, tenantIDKey, tenantID)
+
+	return tConn, newCtx, nil
 }
 
 // Close unsets the current tenant before returning the connection to the pool
