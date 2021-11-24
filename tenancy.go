@@ -23,7 +23,7 @@ func FromContext(ctx context.Context) *Conn {
 
 // GetID finds the tenant ID from the context. REQUIRES tenancy.Open() to have run.
 func GetID(ctx context.Context) string {
-	return ctx.Value(ctxKey).(string)
+	return ctx.Value(tenantIDKey).(string)
 }
 
 type Conn struct {
