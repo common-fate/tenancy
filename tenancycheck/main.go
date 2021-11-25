@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -63,7 +64,11 @@ func run() error {
 
 	insecureTables := []string{}
 
+	tableCount := 0
+
 	for rows.Next() {
+		tableCount++
+
 		var r row
 		err = rows.Scan(&r.SchemaName, &r.TableName, &r.TableOwner, &r.TableSpace, &r.HasIndexes, &r.HasRules, &r.HasTriggers, &r.RowSecurity)
 
@@ -84,6 +89,10 @@ func run() error {
 				insecureTables = append(insecureTables, r.TableName)
 			}
 		}
+	}
+
+	if tableCount == 0 {
+		return errors.New("didn't find any tables - did you run tenancyscan on an empty schema?")
 	}
 
 	if len(insecureTables) > 0 {
