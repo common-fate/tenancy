@@ -18,7 +18,7 @@ var (
 	database   = flag.String("database", "postgres", "postgres database")
 	ssl        = flag.String("sslmode", "disable", "postgres sslmode")
 	schema     = flag.String("schema", "public", "schema to scan for RLS")
-	ignoredStr = flag.String("ignored-tables", "", "a comma-separated list of tables to ignore for RLS")
+	ignoredStr = flag.String("ignore", "", "a comma-separated list of tables to ignore for RLS")
 )
 
 func main() {
