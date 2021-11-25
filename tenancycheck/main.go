@@ -92,7 +92,7 @@ func run() error {
 	}
 
 	if tableCount == 0 {
-		return errors.New("didn't find any tables - did you run tenancyscan on an empty schema?")
+		return errors.New("didn't find any tables - did you run tenancycheck on an empty schema?")
 	}
 
 	if len(insecureTables) > 0 {
