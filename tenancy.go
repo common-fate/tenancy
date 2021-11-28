@@ -30,6 +30,19 @@ type Conn struct {
 	*sql.Conn
 }
 
+// meet the TExecutor interface
+func (tc *Conn) isTenantScoped() {}
+
+// TTx is a tenancy-scoped database transaction.
+// This type is exported so that you can write methods in your application
+// which enforce that a tenancy-scoped transaction must be passed to them.
+type TTx struct {
+	*sql.Tx
+}
+
+// meet the TExecutor interface
+func (t *TTx) isTenantScoped() {}
+
 // Exec is implemented with background context to satisfy interface
 func (tc *Conn) Exec(query string, args ...interface{}) (sql.Result, error) {
 	return tc.ExecContext(context.Background(), query, args...)
@@ -43,6 +56,11 @@ func (tc *Conn) Query(query string, args ...interface{}) (*sql.Rows, error) {
 // QueryRow is implemented with background context to satisfy interface
 func (tc *Conn) QueryRow(query string, args ...interface{}) *sql.Row {
 	return tc.QueryRowContext(context.Background(), query, args...)
+}
+
+func (tc *Conn) BeginTx(ctx context.Context, opts *sql.TxOptions) (*TTx, error) {
+	tx, err := tc.Conn.BeginTx(ctx, opts)
+	return &TTx{tx}, err
 }
 
 // Open sets the tenant and returns a database connection scoped to the tenant
