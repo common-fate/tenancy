@@ -86,6 +86,10 @@ func Open(ctx context.Context, db *sql.DB, tenantID string) (*Conn, context.Cont
 
 // Close unsets the current tenant before returning the connection to the pool
 func Close(ctx context.Context, tc *Conn) error {
+	// skip closing if we don't have a reference to a connection
+	if tc == nil {
+		return nil
+	}
 	_, err := tc.ExecContext(ctx, "select set_tenant('')")
 	if err != nil {
 		closeError := tc.Close()
