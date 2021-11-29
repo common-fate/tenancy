@@ -25,15 +25,18 @@ func Tenancy(db *sql.DB, getTenantIDFromCtx func(context.Context) string) func(n
 					http.StatusInternalServerError)
 				return
 			}
+			// Close the connection after completing http handling
+			defer func() {
+				err = tenancy.Close(ctx, tc)
+				if err != nil {
+					http.Error(w, http.StatusText(http.StatusInternalServerError),
+						http.StatusInternalServerError)
+					return
+				}
+			}()
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 
-			err = tenancy.Close(ctx, tc)
-			if err != nil {
-				http.Error(w, http.StatusText(http.StatusInternalServerError),
-					http.StatusInternalServerError)
-				return
-			}
 		}
 		return http.HandlerFunc(fn)
 	}
