@@ -14,6 +14,11 @@ type Pool struct {
 
 var poolCtxKey = &contextKey{"tenantedDatabaseConnectionPool"}
 
+// FromContext finds the tenanted database connection pool from the context. REQUIRES tenancy.OpenPool() to have run.
+func PoolFromContext(ctx context.Context) *Pool {
+	return ctx.Value(poolCtxKey).(*Pool)
+}
+
 // meet the TExecutor interface
 func (tc *Pool) isTenantScoped() {}
 
