@@ -32,7 +32,6 @@ func Tenancy(db *sql.DB, getTenantIDFromCtx func(context.Context) string) func(n
 			}()
 
 			next.ServeHTTP(w, r.WithContext(ctx))
-
 		}
 		return http.HandlerFunc(fn)
 	}
