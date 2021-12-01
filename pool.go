@@ -93,14 +93,13 @@ func ClosePool(ctx context.Context, tc *Pool) error {
 			_, err := conn.ExecContext(ctx, "select set_tenant('')")
 			if err != nil {
 				closingError = errors.Wrap(closingError, err.Error())
-				err = conn.Close()
-				if err != nil {
-					closingError = errors.Wrap(closingError, err.Error())
-				}
+			}
+			err = conn.Close()
+			if err != nil {
+				closingError = errors.Wrap(closingError, err.Error())
 			}
 		}
 	}
-
 	// will be nill if there were no errors while closing connections
 	return closingError
 }
