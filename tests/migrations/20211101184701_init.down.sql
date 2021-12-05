@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS tenants CASCADE;
+DROP TABLE IF EXISTS schema_migrations CASCADE;
