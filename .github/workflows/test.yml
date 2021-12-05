@@ -54,9 +54,6 @@ jobs:
           tar -zxvf migrate.linux-amd64.tar.gz
           mv migrate /usr/local/bin/
 
-      - name: Install Tenancy Check
-        run: go install ./tenancycheck/main.go
-
       - name: Run Postgres init script
         run: PGPASSWORD=postgres psql -U postgres -d postgres -h localhost -a -f ./tests/scripts/init.sql
 
@@ -64,7 +61,7 @@ jobs:
         run: make migrate
 
       - name: Run Tenancy Check
-        run: tenancycheck -ignore=schema_migrations
+        run: go run ./tenancycheck/main.go -ignore=schema_migrations
 
       - name: Test
         run: make test-postgres
