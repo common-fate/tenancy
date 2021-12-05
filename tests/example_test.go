@@ -1,4 +1,4 @@
-package tenancy_test
+package tenancytests
 
 import (
 	"context"

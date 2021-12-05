@@ -1,0 +1,80 @@
+name: CI
+
+on: [push]
+
+jobs:
+  database-test:
+    name: Postgres Integration Tests
+    runs-on: ubuntu-20.04
+
+    services:
+      postgres:
+        image: postgres:12
+        ports:
+          - "5432:5432"
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_HOST: postgres
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: postgres
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+        # https://github.com/mvdan/github-actions-golang#how-do-i-set-up-caching-between-builds
+      - uses: actions/cache@v2
+        with:
+          # In order:
+          # * Module download cache
+          # * Build cache (Linux)
+          # * Build cache (Mac)
+          # * Build cache (Windows)
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/Library/Caches/go-build
+            %LocalAppData%\go-build
+            /home/runner/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - name: Install Go Migrate
+        run: |
+          mkdir /tmp/gomigrate
+          cd /tmp/gomigrate
+          curl -OL https://github.com/golang-migrate/migrate/releases/download/v4.15.0/migrate.linux-amd64.tar.gz
+          tar -zxvf migrate.linux-amd64.tar.gz
+          mv migrate /usr/local/bin/
+
+      - name: Run Postgres init script
+        run: PGPASSWORD=postgres psql -U postgres -d postgres -h localhost -a -f ./tests/scripts/init.sql
+
+      - name: Run database migrations
+        run: make migrate
+
+      - name: Run Tenancy Check
+        run: go run ./tenancycheck/main.go -ignore=schema_migrations
+
+      - name: Test
+        run: make test-postgres
+
+  golangci-lint:
+    name: Go Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        timeout-minutes: 5
+        with:
+          version: v1.39
+          args: --timeout 2m
