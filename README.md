@@ -12,6 +12,14 @@ The purpose of this pool is to support concurrent API layers such as GraphQL whe
 For uses that do not require concurrent database connections per request, a single connection can be opened with either BeginTx() or Conn()
 When the request has finished being served, tenancy.Close() should be called which will close any open connections.
 
+## Tenancy without a connection pool
+
+To use tenancy with a single connection for all queries rather than a Pool you can use the singleconnection configuration option
+
+```
+    tc, ctx, err := tenancy.Open(ctx, tenanted.DB.DB, uuid.NewString(), tenancy.WithSingleConnection())
+```
+
 ## Tenancy as middleware
 
 auth middleware -> tenancy.Open() -> request handlers -> tenancy.Close()

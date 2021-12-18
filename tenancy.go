@@ -32,14 +32,32 @@ type TTx struct {
 type Pool struct {
 	db          *sql.DB
 	connections []*sql.Conn
+	opts        PoolOptions
+}
+
+type PoolOptions struct {
+	singleConnection bool
+}
+
+type PoolOption func(*PoolOptions)
+
+// configures tenancy to use a single connection rather than a pool
+func WithSingleConnection() PoolOption {
+	return func(po *PoolOptions) { po.singleConnection = true }
 }
 
 // Open sets the tenant and returns a database connection scoped to the tenant
 // it returns a new context which contains the tenant ID and the connection
-func Open(ctx context.Context, db *sql.DB, tenantID string) (*Pool, context.Context, error) {
-	tPool := &Pool{db: db, connections: []*sql.Conn{}}
+func Open(ctx context.Context, db *sql.DB, tenantID string, opts ...PoolOption) (*Pool, context.Context, error) {
+	o := PoolOptions{singleConnection: false}
+	for _, opt := range opts {
+		opt(&o)
+	}
+
+	tPool := &Pool{db: db, connections: []*sql.Conn{}, opts: o}
 	newCtx := context.WithValue(ctx, ctxKey, tPool)
 	newCtx = context.WithValue(newCtx, tenantIDKey, tenantID)
+
 	return tPool, newCtx, nil
 }
 
@@ -138,6 +156,12 @@ func (p *Pool) BeginTx(ctx context.Context, opts *sql.TxOptions) (*TTx, error) {
 // Conn will create a new connection and apply the current tenant
 // The opened connection is registered to a pool internally which is closed when tenancy.Close(ctx, Tconn) is called
 func (p *Pool) Conn(ctx context.Context) (*sql.Conn, error) {
+
+	// If single connection option is specified then look to see it it has been opened yet, if not, open it else return the prevously opened connection
+	if p.opts.singleConnection && len(p.connections) >= 1 {
+		return p.connections[0], nil
+	}
+
 	tenantID := GetID(ctx)
 	conn, err := p.db.Conn(ctx)
 	if err != nil {
