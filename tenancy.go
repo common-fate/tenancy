@@ -16,6 +16,7 @@ var tenantIDKey = &contextKey{"tenantID"}
 
 var ErrNoTenantSet = errors.New("tenant id not set in context")
 
+// Conn implements the TContextExecutor interface
 type Conn struct {
 	*sql.Conn
 }
@@ -26,6 +27,8 @@ type Conn struct {
 type TTx struct {
 	*sql.Tx
 }
+
+// Pool manages a connection pool until closed
 type Pool struct {
 	db          *sql.DB
 	connections []*sql.Conn
