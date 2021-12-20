@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/common-fate/tenancy"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,7 +19,7 @@ func TestConfigurationOptions(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test that the configuration flag leads to a single connection being used for each request
-	tc, ctx, err := tenancy.Open(ctx, tenanted.DB.DB, uuid.NewString(), tenancy.WithSingleConnection())
+	tc, ctx, err := tenancy.Open(ctx, tenanted.DB.DB, TenantId1, tenancy.WithSingleConnection())
 	conn, err := tc.Conn(ctx)
 	assert.NoError(t, err)
 	assert.NoError(t, conn.PingContext(ctx))
@@ -34,7 +33,7 @@ func TestConfigurationOptions(t *testing.T) {
 	assert.NoError(t, tenancy.Close(ctx, tc))
 
 	// test that new connections are opened without by default
-	tc, ctx, err = tenancy.Open(ctx, tenanted.DB.DB, uuid.NewString())
+	tc, ctx, err = tenancy.Open(ctx, tenanted.DB.DB, TenantId1)
 	conn, err = tc.Conn(ctx)
 	assert.NoError(t, err)
 	assert.NoError(t, conn.PingContext(ctx))

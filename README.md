@@ -17,7 +17,7 @@ When the request has finished being served, tenancy.Close() should be called whi
 To use tenancy with a single connection for all queries rather than a Pool you can use the singleconnection configuration option
 
 ```
-    tc, ctx, err := tenancy.Open(ctx, tenanted.DB.DB, uuid.NewString(), tenancy.WithSingleConnection())
+    tc, ctx, err := tenancy.Open(ctx, tenanted.DB.DB, "a4fab457-9fb3-4486-a2c3-22e767668506", tenancy.WithSingleConnection())
 ```
 
 ## Tenancy as middleware

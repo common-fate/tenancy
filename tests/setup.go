@@ -8,7 +8,6 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
@@ -17,6 +16,9 @@ import (
 type rootDbUser struct{ *sqlx.DB }
 type tenantedDbUser struct{ *sqlx.DB }
 
+var TenantId1 string = "a4fab457-9fb3-4486-a2c3-22e767668506"
+var TenantId2 string = "51a3f3bf-7a92-4885-9227-6387f38fbba4"
+var UserID string = "e162b377-2a28-49c1-8fb1-b49c61ae38bc"
 var rootDatabase *rootDbUser
 var tenantedDatabase *tenantedDbUser
 var dbName string
@@ -43,7 +45,7 @@ func (db *rootDbUser) seedTestData(ctx context.Context, tenantId1 string, tenant
 	if err != nil {
 		return err
 	}
-	_, err = db.ExecContext(ctx, "INSERT INTO users (id, tenant_id) VALUES ($1, $2)", uuid.NewString(), tenantId1)
+	_, err = db.ExecContext(ctx, "INSERT INTO users (id, tenant_id) VALUES ($1, $2)", UserID, tenantId1)
 	if err != nil {
 		return err
 	}
