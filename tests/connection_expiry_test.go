@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/common-fate/tenancy"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,13 +22,13 @@ func TestConnectionExpiry(t *testing.T) {
 	tenanted.SetConnMaxIdleTime(time.Second)
 	tenanted.SetConnMaxLifetime(time.Second)
 
-	// We use a random uuid here because we are just testing that PingContext is successfull
-	tc, ctx, err := tenancy.Open(ctx, tenanted.DB.DB, uuid.NewString())
-
-	assert.NoError(t, tc.PingContext(ctx))
+	tc, ctx, err := tenancy.Open(ctx, tenanted.DB.DB, TenantId1)
+	conn, err := tc.Conn(ctx)
+	assert.NoError(t, err)
+	assert.NoError(t, conn.PingContext(ctx))
 
 	time.Sleep(time.Second * 2)
 
-	assert.NoError(t, tc.PingContext(ctx))
+	assert.NoError(t, conn.PingContext(ctx))
 	assert.NoError(t, tenancy.Close(ctx, tc))
 }
