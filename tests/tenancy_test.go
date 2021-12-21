@@ -43,3 +43,22 @@ func TestTenantIsolationWorks(t *testing.T) {
 	assert.NoError(t, tenancy.Close(ctx, tc))
 
 }
+
+func TestPostgresCurrentSetting(t *testing.T) {
+	ctx := context.Background()
+	rootDb, tenanted, err := getDB()
+	assert.NoError(t, err)
+
+	// Prepare the Database for the test
+	assert.NoError(t, rootDb.seedTestData(ctx, TenantId1, TenantId2))
+
+	// Open a connection for tenant 2 Expect that there will be no users returned
+	tc2, ctx2, err := tenancy.Open(ctx, tenanted.DB.DB, TenantId2, tenancy.WithSingleConnection())
+	// Open a connection for tenant 1 Expect that there will be 1 user returned
+	tc, ctx1, err := tenancy.Open(ctx, tenanted.DB.DB, TenantId1, tenancy.WithSingleConnection())
+	rows, err := tc2.QueryContext(ctx2, "SELECT * FROM users")
+	assert.False(t, rows.Next())
+	assert.NoError(t, rows.Close())
+	assert.NoError(t, tenancy.Close(ctx1, tc))
+
+}
