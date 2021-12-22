@@ -40,7 +40,7 @@ func Query(ctx context.Context, db ContextExecutor) error {
 }
 
 func QueryWithWhere(ctx context.Context, db ContextExecutor) error {
-	rows, err := db.QueryContext(ctx, "SELECT * FROM users where tenant_id='"+TenantId1+"'")
+	rows, err := db.QueryContext(ctx, "SELECT * FROM users where tenant_id=$1", TenantId1)
 	if err != nil {
 		return err
 	}
