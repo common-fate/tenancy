@@ -33,7 +33,7 @@ type TTx struct {
 type Pool struct {
 	db *sql.DB
 
-	mu *sync.Mutex
+	mu sync.Mutex
 	// fields below are protected by the mutex
 	connections []*sql.Conn
 	opts        PoolOptions
