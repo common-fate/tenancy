@@ -31,14 +31,16 @@ func Tenancy(db *sql.DB, log Logger, getTenantIDFromCtx func(context.Context) st
 			defer func() {
 				if tc != nil {
 					err = tenancy.Close(ctx, tc)
-					if err != nil {
+					if err != nil && log != nil {
 						log.Error(err)
 					}
 				}
 			}()
 
 			if err != nil {
-				log.Error(err)
+				if log != nil {
+					log.Error(err)
+				}
 				http.Error(w, http.StatusText(http.StatusInternalServerError),
 					http.StatusInternalServerError)
 				return
