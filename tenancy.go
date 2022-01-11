@@ -3,6 +3,7 @@ package tenancy
 import (
 	"context"
 	"database/sql"
+	"sync"
 
 	"github.com/pkg/errors"
 )
@@ -30,7 +31,10 @@ type TTx struct {
 
 // Pool manages a connection pool until closed
 type Pool struct {
-	db          *sql.DB
+	db *sql.DB
+
+	mu sync.Mutex
+	// fields below are protected by the mutex
 	connections []*sql.Conn
 	opts        PoolOptions
 }
@@ -172,6 +176,8 @@ func (p *Pool) Conn(ctx context.Context) (*sql.Conn, error) {
 		closeError := conn.Close()
 		return nil, errors.Wrap(closeError, err.Error())
 	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	p.connections = append(p.connections, conn)
 	return conn, nil
 }
