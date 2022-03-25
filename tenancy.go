@@ -3,6 +3,7 @@ package tenancy
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -174,7 +175,10 @@ func (p *Pool) Conn(ctx context.Context) (*sql.Conn, error) {
 	_, err = conn.ExecContext(ctx, "select set_tenant($1)", tenantID)
 	if err != nil {
 		closeError := conn.Close()
-		return nil, errors.Wrap(closeError, err.Error())
+		if closeError != nil {
+			return nil, fmt.Errorf("error closing connection: %s, original error: %s", closeError, err)
+		}
+		return nil, err
 	}
 	p.mu.Lock()
 	defer p.mu.Unlock()
