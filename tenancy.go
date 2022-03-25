@@ -126,6 +126,9 @@ func (p *Pool) ExecContext(ctx context.Context, query string, args ...interface{
 	if err != nil {
 		return nil, err
 	}
+	if conn == nil {
+		return nil, errors.New("conn was nil")
+	}
 	return conn.ExecContext(ctx, query, args...)
 }
 
@@ -134,6 +137,9 @@ func (p *Pool) QueryContext(ctx context.Context, query string, args ...interface
 	conn, err := p.Conn(ctx)
 	if err != nil {
 		return nil, err
+	}
+	if conn == nil {
+		return nil, errors.New("conn was nil")
 	}
 	return conn.QueryContext(ctx, query, args...)
 }
@@ -153,6 +159,9 @@ func (p *Pool) BeginTx(ctx context.Context, opts *sql.TxOptions) (*TTx, error) {
 	conn, err := p.Conn(ctx)
 	if err != nil {
 		return nil, err
+	}
+	if conn == nil {
+		return nil, errors.New("conn was nil")
 	}
 	tx, err := conn.BeginTx(ctx, opts)
 	return &TTx{tx}, err
