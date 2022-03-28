@@ -3,6 +3,7 @@ package tenancy
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -125,6 +126,9 @@ func (p *Pool) ExecContext(ctx context.Context, query string, args ...interface{
 	if err != nil {
 		return nil, err
 	}
+	if conn == nil {
+		return nil, errors.New("conn was nil")
+	}
 	return conn.ExecContext(ctx, query, args...)
 }
 
@@ -133,6 +137,9 @@ func (p *Pool) QueryContext(ctx context.Context, query string, args ...interface
 	conn, err := p.Conn(ctx)
 	if err != nil {
 		return nil, err
+	}
+	if conn == nil {
+		return nil, errors.New("conn was nil")
 	}
 	return conn.QueryContext(ctx, query, args...)
 }
@@ -152,6 +159,9 @@ func (p *Pool) BeginTx(ctx context.Context, opts *sql.TxOptions) (*TTx, error) {
 	conn, err := p.Conn(ctx)
 	if err != nil {
 		return nil, err
+	}
+	if conn == nil {
+		return nil, errors.New("conn was nil")
 	}
 	tx, err := conn.BeginTx(ctx, opts)
 	return &TTx{tx}, err
@@ -174,7 +184,10 @@ func (p *Pool) Conn(ctx context.Context) (*sql.Conn, error) {
 	_, err = conn.ExecContext(ctx, "select set_tenant($1)", tenantID)
 	if err != nil {
 		closeError := conn.Close()
-		return nil, errors.Wrap(closeError, err.Error())
+		if closeError != nil {
+			return nil, fmt.Errorf("error closing connection: %s, original error: %s", closeError, err)
+		}
+		return nil, err
 	}
 	p.mu.Lock()
 	defer p.mu.Unlock()
